@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit and Angle Calculators</title>
+    <script>
+        let useSI = false; // Default to non-SI units
+
+        function toggleUnits() {
+            useSI = !useSI;
+            document.getElementById("unitToggle").textContent = useSI ? "Switch to non-SI units" : "Switch to SI units";
+			document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
+            document.getElementById("iasLabel").textContent = useSI ? "Indicated Airspeed (IAS) in km/h:" : "Indicated Airspeed (IAS) in knots:";
+            document.getElementById("altitudeLabel").textContent = useSI ? "Altitude in meters:" : "Altitude in feet:";
+			document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
+            calculateTAS();
+            calculateIAS();
+        }
+
+        function calculateTAS() {
+            let ias = parseFloat(document.getElementById("ias").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(ias) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let tas = ias * constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628));
+            document.getElementById("tas").value = tas.toFixed(4);
+        }
+
+        function calculateIAS() {
+            let tas = parseFloat(document.getElementById("tas").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(tas) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let ias = tas / (constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628)));
+            document.getElementById("ias").value = ias.toFixed(4);
+        }
+
+        function convertSpeed(inputId) {
+            let value = parseFloat(document.getElementById(inputId).value);
+            if (isNaN(value)) return;
+
+            let kmh, ms, knots;
+
+            if (inputId === "kmh") {
+                kmh = value;
+                ms = kmh / 3.6;
+                knots = kmh / 1.852;
+            } else if (inputId === "ms") {
+                ms = value;
+                kmh = ms * 3.6;
+                knots = kmh / 1.852;
+            } else if (inputId === "knots") {
+                knots = value;
+                kmh = knots * 1.852;
+                ms = kmh / 3.6;
+            }
+
+            document.getElementById("kmh").value = kmh.toFixed(4);
+            document.getElementById("ms").value = ms.toFixed(4);
+            document.getElementById("knots").value = knots.toFixed(4);
+        }
+
+        function convertHeightDistance(inputId) {
+            let value = parseFloat(document.getElementById(inputId).value);
+            if (isNaN(value)) return;
+
+            let meters, feet, nauticalMiles, kilometers;
+
+            if (inputId === "meters") {
+                meters = value;
+                feet = meters * 3.28084;
+                nauticalMiles = meters / 1852;
+                kilometers = meters / 1000;
+            } else if (inputId === "feet") {
+                feet = value;
+                meters = feet / 3.28084;
+                nauticalMiles = meters / 1852;
+                kilometers = meters / 1000;
+            } else if (inputId === "nauticalMiles") {
+                nauticalMiles = value;
+                meters = nauticalMiles * 1852;
+                feet = meters * 3.28084;
+                kilometers = meters / 1000;
+            } else if (inputId === "kilometers") {
+                kilometers = value;
+                meters = kilometers * 1000;
+                feet = meters * 3.28084;
+                nauticalMiles = meters / 1852;
+            }
+
+            document.getElementById("meters").value = meters.toFixed(4);
+            document.getElementById("feet").value = feet.toFixed(4);
+            document.getElementById("nauticalMiles").value = nauticalMiles.toFixed(4);
+            document.getElementById("kilometers").value = kilometers.toFixed(4);
+        }
+
+        let angleInDegrees = true;
+
+        function toggleAngleMode() {
+            angleInDegrees = !angleInDegrees;
+            document.getElementById("AngleGradientSwitch").textContent = angleInDegrees ? "Switch to Gradient" : "Switch to Angle";
+            document.getElementById("angleModeLabel").textContent = angleInDegrees ? "Current mode: Degrees" : "Current mode: Gradient";
+            document.getElementById("AngleGradientLabel").textContent = angleInDegrees ? "Angle (θ):" : "Gradient (%):";
+            calculateHeightLoss();
+        }
+
+        function updateInputFields() {
+            let mode = document.getElementById("calculationMode").value;
+
+            // Enable all fields first
+            document.getElementById("angle").disabled = false;
+            document.getElementById("height").disabled = false;
+            document.getElementById("length").disabled = false;
+
+            // Disable the input field based on what is being calculated
+            if (mode === "Height") {
+                document.getElementById("height").disabled = true;
+                document.getElementById("height").value = "";
+            } else if (mode === "Length") {
+                document.getElementById("length").disabled = true;
+                document.getElementById("length").value = "";
+            } else {
+                document.getElementById("angle").disabled = true;
+                document.getElementById("angle").value = "";
+            }
+
+            calculateHeightLoss();
+        }
+
+        function calculateHeightLoss() {
+            let mode = document.getElementById("calculationMode").value;
+            let angle = parseFloat(document.getElementById("angle").value);
+            let height = parseFloat(document.getElementById("height").value);
+            let length = parseFloat(document.getElementById("length").value);
+
+            let result = "";
+
+            if (mode === "Height" && !isNaN(angle) && !isNaN(length)) {
+                if (angleInDegrees) {
+                    let theta = Math.tan(angle * (Math.PI / 180));
+                    result = (theta * length).toFixed(4);
+                } else {
+                    result = ((angle / 100) * length).toFixed(4);
+                }
+            } else if (mode === "Length" && !isNaN(angle) && !isNaN(height)) {
+                if (angleInDegrees) {
+                    let theta = Math.tan(angle * (Math.PI / 180));
+                    result = (height / theta).toFixed(4);
+                } else {
+                    result = (height / (angle / 100)).toFixed(4);
+                }
+            } else if (mode === "Angle" && !isNaN(height) && !isNaN(length)) {
+                result = (Math.atan(height / length) * (180 / Math.PI)).toFixed(4);
+            } else if (mode === "Gradient" && !isNaN(height) && !isNaN(length)) {
+                result = ((height / length) * 100).toFixed(4);
+            }
+
+            document.getElementById("heightLossResult").textContent = result ? result : "Invalid Input";
+        }
+    </script>
+</head>
+<body>
+    <h2>IAS to TAS Calculator</h2>
+    <button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
+	<span id="unitToggleMode">Current mode: non-SI</span>
+    <br><br>
+    <label id="iasLabel">Indicated Airspeed (IAS) in knots:</label>
+    <input type="number" id="ias" oninput="calculateTAS()">
+    <br><br>
+    <label id="altitudeLabel">Altitude in feet:</label>
+    <input type="number" id="altitude" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label>ISA Deviation (°C):</label>
+    <select id="isaSign" onchange="calculateTAS(); calculateIAS()">
+        <option value="+">+</option>
+        <option value="-">-</option>
+    </select>
+    <input type="number" id="isa" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label id="tasLabel">True Airspeed (TAS):</label>
+    <input type="number" id="tas" oninput="calculateIAS()">
+    <hr>
+
+    <h2>Speed Unit Calculator</h2>
+    <label>km/h:</label>
+	<input type="number" id="kmh" oninput="convertSpeed('kmh')">
+	<br><br>
+
+    <label>m/s:</label>
+	<input type="number" id="ms" oninput="convertSpeed('ms')">
+	<br><br>
+
+    <label>Knots:</label>
+	<input type="number" id="knots" oninput="convertSpeed('knots')">
+    <hr>
+
+    <h2>Distance and Height Unit Calculator</h2>
+    <label>Meters:</label>
+    <input type="number" id="meters" oninput="convertHeightDistance('meters')">
+    <br><br>
+
+    <label>Feet:</label>
+    <input type="number" id="feet" oninput="convertHeightDistance('feet')">
+    <br><br>
+
+    <label>Nautical Miles:</label>
+    <input type="number" id="nauticalMiles" oninput="convertHeightDistance('nauticalMiles')">
+    <br><br>
+
+    <label>Kilometers:</label>
+    <input type="number" id="kilometers" oninput="convertHeightDistance('kilometers')">
+    <hr>
+
+    <h2>Height Gain / Loss with an Angle or Gradient</h2>
+
+    <button id="AngleGradientSwitch" onclick="toggleAngleMode()">Switch to Gradient</button>
+    <span id="angleModeLabel">Current mode: Degrees</span>
+    <br><br>
+
+    <label for="calculationMode">Calculate:</label>
+    <select id="calculationMode" onchange="updateInputFields()">
+        <option value="Angle">Angle</option>
+        <option value="Gradient">Gradient</option>
+        <option value="Height">Height</option>
+        <option value="Length">Length</option>
+    </select>
+    <br><br>
+
+    <label id="AngleGradientLabel">Angle (θ):</label>
+    <input type="number" id="angle" oninput="calculateHeightLoss()">
+    <br><br>
+
+    <label>Height:</label>
+    <input type="number" id="height" oninput="calculateHeightLoss()">
+    <br><br>
+
+    <label>Length:</label>
+    <input type="number" id="length" oninput="calculateHeightLoss()">
+    <br><br>
+
+    <p>Result: <span id="heightLossResult"></span></p>
+</body>
+</html>
