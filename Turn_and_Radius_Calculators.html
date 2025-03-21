@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turn Calculators</title>
+    <script>
+        let useSI = false;  // Default to non-SI units
+        let useTAS = true;  // Default to TAS input
+        let rateOfTurn = 0;
+
+        function toggleUnits() {
+            useSI = !useSI;
+            document.getElementById("unitToggle").textContent = useSI ? "Switch to non-SI units" : "Switch to SI units";
+            document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
+            document.getElementById("iasLabel").textContent = useSI ? "Indicated Airspeed (IAS) in km/h:" : "Indicated Airspeed (IAS) in knots:";
+            document.getElementById("altitudeLabel").textContent = useSI ? "Altitude in meters:" : "Altitude in feet:";
+            document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
+			document.getElementById("radiusNMorkm").textContent = useSI ? " km" : " NM";
+			document.getElementById("WindSpeedUnit").textContent = useSI ? "Wind Speed in km/h:" : "Wind Speed in knots:";
+			document.getElementById("EinNMorkm").textContent = useSI ? " km" : " NM";
+            calculateTAS();
+            calculateRateOfTurn();
+            calculateEaot();
+        }
+
+        function toggleSpeedInput() {
+            useTAS = !useTAS;
+            document.getElementById("speedToggle").textContent = useTAS ? "Switch to IAS" : "Switch to TAS";
+            document.getElementById("ias").disabled = useTAS;
+            document.getElementById("altitude").disabled = useTAS;
+            document.getElementById("isa").disabled = useTAS;
+            document.getElementById("isaSign").disabled = useTAS;
+            calculateTAS();
+            calculateRateOfTurn();
+            calculateEaot();
+        }
+
+        function calculateTAS() {
+            if (useTAS) return;  // Skip if using TAS input
+
+            let ias = parseFloat(document.getElementById("ias").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(ias) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let tas = ias * constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628));
+            document.getElementById("tas").value = tas.toFixed(4);
+
+            calculateRateOfTurn();
+        }
+
+        function calculateRateOfTurn() {
+            let tas = parseFloat(document.getElementById("tas").value);
+            let bankAngle = parseFloat(document.getElementById("bankAngle").value);
+
+            if (isNaN(tas) || isNaN(bankAngle)) {
+                document.getElementById("rateOfTurnResult").textContent = "Invalid Input";
+                document.getElementById("radiusResult").textContent = "Invalid Input";
+                rateOfTurn = 0;
+                return;
+            }
+
+            if (useSI) {
+                rateOfTurn = (6355 * Math.tan(bankAngle * Math.PI / 180)) / (Math.PI * tas); // km/h
+            } else {
+                rateOfTurn = (3431 * Math.tan(bankAngle * Math.PI / 180)) / (Math.PI * tas); // knots
+            }
+
+            document.getElementById("rateOfTurnResult").textContent = rateOfTurn.toFixed(4);
+
+            let radius = tas / (20 * Math.PI * rateOfTurn);
+            document.getElementById("radiusResult").textContent = radius.toFixed(4);
+
+            calculateEaot();
+        }
+
+        function calculateEaot() {
+            let angleOfTurn = parseFloat(document.getElementById("angleOfTurn").value);
+            let windSpeed = parseFloat(document.getElementById("windSpeed").value);
+
+            if (isNaN(angleOfTurn) || isNaN(windSpeed) || rateOfTurn === 0) {
+                document.getElementById("eaotResult").textContent = "Invalid Input";
+                return;
+            }
+
+            let eaot = (angleOfTurn / rateOfTurn) * (windSpeed / 3600);
+            document.getElementById("eaotResult").textContent = `E(${angleOfTurn}°) = ${eaot.toFixed(4)}`;
+        }
+    </script>
+</head>
+<body>
+    <h2>Rate of Turn and Radius Calculator</h2>
+    <button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
+    <span id="unitToggleMode">Current mode: non-SI</span>
+    <button id="speedToggle" onclick="toggleSpeedInput()">Switch to IAS</button>
+    <span>Current input: TAS</span>
+    <br><br>
+
+    <label id="iasLabel">Indicated Airspeed (IAS) in knots:</label>
+    <input type="number" id="ias" oninput="calculateTAS()" disabled>
+    <br><br>
+
+    <label id="altitudeLabel">Altitude in feet:</label>
+    <input type="number" id="altitude" oninput="calculateTAS()" disabled>
+    <br><br>
+
+    <label>ISA Deviation (°C):</label>
+    <select id="isaSign" onchange="calculateTAS()" disabled>
+        <option value="+">+</option>
+        <option value="-">-</option>
+    </select>
+    <input type="number" id="isa" oninput="calculateTAS()" disabled>
+    <br><br>
+
+    <label id="tasLabel">True Airspeed (TAS) in knots:</label>
+    <input type="number" id="tas" oninput="calculateRateOfTurn()">
+    <br><br>
+
+    <label>Bank Angle (°):</label>
+    <input type="number" id="bankAngle" oninput="calculateRateOfTurn()">
+    <br><br>
+
+    <p>Rate of Turn (°/s): <span id="rateOfTurnResult">N/A</span></p>
+    <p>Radius of Turn: <span id="radiusResult">N/A</span><span id="radiusNMorkm"> NM</span></p>
+
+    <hr>
+    <h2>Wind Effect Calculator</h2>
+    <label>Angle of Turn (°):</label>
+    <input type="number" id="angleOfTurn" oninput="calculateEaot()">
+    <br><br>
+
+    <label id="WindSpeedUnit">Wind Speed in knots:</label>
+    <input type="number" id="windSpeed" oninput="calculateEaot()">
+    <br><br>
+
+    <p>Wind Effect: <span id="eaotResult">N/A</span><span id="EinNMorkm"> NM</span></p>
+</body>
+</html>
