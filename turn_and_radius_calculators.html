@@ -27,6 +27,7 @@
         function toggleSpeedInput() {
             useTAS = !useTAS;
             document.getElementById("speedToggle").textContent = useTAS ? "Switch to IAS" : "Switch to TAS";
+			document.getElementById("currentTASorIAS").textContent = useTAS ? "Current input: TAS" : "Current input: IAS";
             document.getElementById("ias").disabled = useTAS;
             document.getElementById("altitude").disabled = useTAS;
             document.getElementById("isa").disabled = useTAS;
@@ -104,7 +105,7 @@
     <button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
     <span id="unitToggleMode">Current mode: non-SI</span>
     <button id="speedToggle" onclick="toggleSpeedInput()">Switch to IAS</button>
-    <span>Current input: TAS</span>
+    <span id="currentTASorIAS">Current input: TAS</span>
     <br><br>
 
     <label id="iasLabel">Indicated Airspeed (IAS) in knots:</label>
