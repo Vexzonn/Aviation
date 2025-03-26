@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navaid Tolerance Calculators</title>
+    <script>
+		let useSI = false;  // Default to non-SI units
+		
+		function toggleUnits() {
+			useSI = !useSI;
+			document.getElementById("unitToggle").textContent = useSI ? "Switch to non-SI units" : "Switch to SI units";
+            document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
+			document.querySelectorAll(".NMorkm").forEach(element => {
+				element.textContent = useSI ? " km" : " NM";
+			});
+			document.querySelectorAll(".ftorm").forEach(element => {
+				element.textContent = useSI ? " m" : " ft";
+			});
+
+			
+			const input = parseFloat(document.getElementById("userInput").value);
+			calculateDMETolerance(input);
+			calculateConeofSilence();
+		}
+		
+        function calculateNavaidTolerances() {
+			const input = parseFloat(document.getElementById("userInput").value);
+
+			if (isNaN(input)) {
+				document.getElementById("vorGuidanceResult").textContent = "N/A";
+				document.getElementById("ndbGuidanceResult").textContent = "N/A";
+				document.getElementById("locGuidanceResult").textContent = "N/A";
+				document.getElementById("vorNoGuidanceResult").textContent = "N/A";
+				document.getElementById("ndbNoGuidanceResult").textContent = "N/A";
+				document.getElementById("locNoGuidanceResult").textContent = "N/A";
+				return;
+			}
+
+			document.getElementById("vorGuidanceResult").textContent = (input * Math.tan(5.2 * Math.PI / 180)).toFixed(4);
+			document.getElementById("ndbGuidanceResult").textContent = (input * Math.tan(6.9 * Math.PI / 180)).toFixed(4);
+			document.getElementById("locGuidanceResult").textContent = (input * Math.tan(2.4 * Math.PI / 180)).toFixed(4);
+			document.getElementById("vorNoGuidanceResult").textContent = (input * Math.tan(4.5 * Math.PI / 180)).toFixed(4);
+			document.getElementById("ndbNoGuidanceResult").textContent = (input * Math.tan(6.2 * Math.PI / 180)).toFixed(4);
+			document.getElementById("locNoGuidanceResult").textContent = (input * Math.tan(1.4 * Math.PI / 180)).toFixed(4);
+			
+			calculateDMETolerance(input);
+		}
+		
+		function calculateDMETolerance(input) {
+			if (isNaN(input)) {
+				document.getElementById("dmeToleranceResult").textContent = "N/A";
+				return;
+			}
+			
+			if (useSI) {
+				dmeTolerance = (input * 0.0125 + 0.46);
+			} else {
+				dmeTolerance = (input * 0.0125 + 0.25);
+			}
+			
+			document.getElementById("dmeToleranceResult").textContent = dmeTolerance.toFixed(4);
+
+		}
+		
+		function updateInputFieldConeSemiAngle() {
+			const navaidType = document.getElementById("navaidType").value;
+			
+			document.getElementById("coneSemiAngle").disabled = false;
+			
+			if (navaidType !== "manualInput") {
+				document.getElementById("coneSemiAngle").disabled = true;
+			} else {
+				document.getElementById("coneSemiAngle").value = "";
+			}
+			
+			calculateConeofSilence();
+			
+		}
+		
+		function calculateConeofSilence() {
+			const inputHeight = parseFloat(document.getElementById("userInputHeight").value);
+			const navaidType = document.getElementById("navaidType").value; 
+			let coneSemiAngle = parseFloat(document.getElementById("coneSemiAngle").value);
+			
+			if (navaidType === "VOR") {
+				coneSemiAngle = 50;
+			} else if (navaidType === "NDB") {
+				coneSemiAngle = 40;
+			} 			
+			
+			document.getElementById("coneSemiAngle").value = coneSemiAngle.toFixed();
+			
+			if (isNaN(inputHeight || coneSemiAngle)) {
+				document.getElementById("coneofSilenceResult").textContent = "N/A";
+				return;
+			}
+			
+			let coneofSilenceResult = 0;
+			
+			if (useSI) {
+				coneofSilenceResult = (inputHeight / 1000) * Math.tan(coneSemiAngle * Math.PI / 180);
+			} else {
+				coneofSilenceResult = (0.164 * (inputHeight / 1000)) * Math.tan(coneSemiAngle * Math.PI / 180);
+			}
+			
+			document.getElementById("coneofSilenceResult").textContent = coneofSilenceResult.toFixed(4);
+
+		}
+		
+    </script>
+</head>
+<body>
+    <h2>VOR, NDB and LOC fix Tolerances</h2>
+	<button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
+    <span id="unitToggleMode">Current mode: non-SI</span>
+	<br><br>
+	<label>Distance from Navaid:</label>
+	<input type="number" id="userInput" oninput="calculateNavaidTolerances()"><span class="NMorkm"> NM</span>
+	<br><br>
+
+	<p><strong>Navaid providing track guidance:</strong></p>
+	<p>VOR: ± <span id="vorGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<p>NDB: ± <span id="ndbGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<p>LOC: ± <span id="locGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<br>
+	
+	<p><strong>Navaid not providing track guidance:</strong></p>
+	<p>VOR: ± <span id="vorNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<p>NDB: ± <span id="ndbNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<p>LOC: ± <span id="locNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<hr>
+	
+	<h2>DME fix Tolerance</h2>
+	
+	<p>DME Fix Tolerance: ± <span id="dmeToleranceResult">N/A</span>
+	<span class="NMorkm"> NM</span></p>
+	<hr>
+	
+	<h2>VOR and NDB Cone of Silence Calculator</h2>
+	<label>Height above Navaid:</label>
+	<input type="number" id="userInputHeight" oninput="calculateConeofSilence()"><span class="ftorm"> ft</span>
+	<br><br>
+	
+	<label for="navaidType">Calculate Cone Semi-Angle for:</label>
+    <select id="navaidType" onchange="updateInputFieldConeSemiAngle()">
+        <option value="VOR">VOR</option>
+        <option value="NDB">NDB</option>
+        <option value="manualInput">Manual Angle Input</option>
+    </select>
+	<br><br>
+	
+	<label>Cone Semi Angle:</label>
+	<input type="number" id="coneSemiAngle" oninput="calculateConeofSilence()"><span> (°)</span>
+	<br><br>
+	
+	<p>Cone of Silence / Confusion (zV): <span id="coneofSilenceResult">N/A</span><span class="NMorkm"> NM</span>
+	
+</body>
+</html>
