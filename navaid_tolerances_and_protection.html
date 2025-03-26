@@ -91,7 +91,7 @@
 			
 			document.getElementById("coneSemiAngle").value = coneSemiAngle.toFixed();
 			
-			if (isNaN(inputHeight || coneSemiAngle)) {
+			if (isNaN(inputHeight) || isNaN(coneSemiAngle)) {
 				document.getElementById("coneofSilenceResult").textContent = "N/A";
 				return;
 			}
