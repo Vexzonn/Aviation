@@ -80,9 +80,16 @@
                 ms = kmh / 3.6;
             }
 
-            document.getElementById("kmh").value = kmh.toFixed(4);
-            document.getElementById("ms").value = ms.toFixed(4);
-            document.getElementById("knots").value = knots.toFixed(4);
+            if (inputId !== "kmh") {
+				document.getElementById("kmh").value = kmh.toFixed(4);
+			}
+			if (inputId !== "ms") {
+				document.getElementById("ms").value = ms.toFixed(4);
+			}
+			if (inputId !== "knots") {
+				document.getElementById("knots").value = knots.toFixed(4);
+			}
+			
         }
 
         function convertHeightDistance(inputId) {
@@ -113,10 +120,18 @@
                 nauticalMiles = meters / 1852;
             }
 
-            document.getElementById("meters").value = meters.toFixed(4);
-            document.getElementById("feet").value = feet.toFixed(4);
-            document.getElementById("nauticalMiles").value = nauticalMiles.toFixed(4);
-            document.getElementById("kilometers").value = kilometers.toFixed(4);
+            if (inputId !== "meters") {
+				document.getElementById("meters").value = meters.toFixed(4);
+			}
+            if (inputId !== "feet") {
+				document.getElementById("feet").value = feet.toFixed(4);
+			}
+			if (inputId !== "nauticalMiles") {
+				document.getElementById("nauticalMiles").value = nauticalMiles.toFixed(4);
+			}
+			if (inputId !== "kilometers") {
+				document.getElementById("kilometers").value = kilometers.toFixed(4);
+			}
         }
 
         let angleInDegrees = true;
