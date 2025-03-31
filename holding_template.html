@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holding Calculator</title>
+    <script>
+        let useSI = false; // Default to non-SI units
+
+        function toggleUnits() {
+            useSI = !useSI;
+            document.getElementById("unitToggle").textContent = useSI ? "Switch to non-SI units" : "Switch to SI units";
+			document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
+            document.getElementById("iasLabel").textContent = useSI ? "Indicated Airspeed (IAS) in km/h:" : "Indicated Airspeed (IAS) in knots:";
+            document.getElementById("altitudeLabel").textContent = useSI ? "Altitude in meters:" : "Altitude in feet:";
+			document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
+			document.getElementById("vResultUnit").textContent = useSI ? " km/s" : " NM/s";
+			document.getElementById("hResultUnit").textContent = useSI ? " * 1000 meters" : " * 1000 feet";
+			document.getElementById("w_primeResultUnit").textContent = useSI ? " km/s" : " NM/s";
+			document.querySelectorAll(".NMorkm").forEach(element => {
+				element.textContent = useSI ? " km" : " NM";
+			});
+            calculateTAS();
+            calculateIAS();
+        }
+
+        function calculateTAS() {
+            let ias = parseFloat(document.getElementById("ias").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(ias) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let tas = ias * constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628));
+            document.getElementById("tas").value = tas.toFixed(4);
+			
+			calculateHoldingTemplate();
+        }
+
+        function calculateIAS() {
+            let tas = parseFloat(document.getElementById("tas").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(tas) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let ias = tas / (constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628)));
+            document.getElementById("ias").value = ias.toFixed(4);
+        }
+		
+		function calculateHoldingTemplate() {
+			let tas = parseFloat(document.getElementById("tas").value);
+			let altitude = parseFloat(document.getElementById("altitude").value);
+			let T = parseFloat(document.getElementById("holdingTime").value);
+			
+			if (isNaN(tas) || isNaN(altitude) || isNaN(T)) return;
+			
+			let V = tas;
+			let v = V / 3600;
+			
+			let R = 0;
+			if (useSI) {
+				R = Math.min(943.27 / V, 3);
+			} else {
+				R = Math.min(509.26 / V, 3);
+			}
+			
+			let r = V / (62.83 * R);
+			let h = altitude / 1000;
+			
+			let w = 0;
+			if (useSI) {
+				w = 12 * h + 87;
+			} else {
+				w = 2 * h + 47;
+			}
+			
+			let w_prime = w / 3600;
+			let E45 = (45 * w_prime) / R;
+			let t = 60 * T;
+			let L = v * t;
+			let ab = 5 * v;
+			let ac = 11 * v;
+			let gi1 = (t - 5) * v;
+			let gi2 = (t + 21) * v;
+			let Wb = 5 * w_prime;
+			let Wc = 11 * w_prime;
+			let Wd = Wc + E45;
+			let We = Wc + 2 * E45;
+			let Wf = Wc + 3 * E45;
+			let Wg = Wc + 4 * E45;
+			let Wh = Wb + 4 * E45;
+			let Wo = Wb + 5 * E45;
+			let Wp = Wb + 6 * E45;
+			let Wi1 = (t + 6) * w_prime + 4 * E45;
+			let Wi2 = Wi1 + 14 * w_prime;
+			let Wj = Wi2 + E45;
+			let Wk = Wi2 + 2 * E45;
+			let Wm = Wi2 + 3 * E45;
+			let Wn3 = Wi1 + 4 * E45;
+			let Wn4 = Wi2 + 4 * E45;
+		
+			let XE = 2 * r + (t + 15) * v + (t + 26 + 195 / R) * w_prime;
+			let YE = 11 * v * Math.cos(20 * Math.PI / 180) + r * (1 + Math.sin(20 * Math.PI / 180)) + 
+					(t + 15) * v * Math.tan(5 * Math.PI / 180) + (t + 26 + 125 / R) * w_prime;
+		
+			document.getElementById("vResult").textContent = v.toFixed(4);
+			document.getElementById("RResult").textContent = R.toFixed(4);
+			document.getElementById("rResult").textContent = r.toFixed(4);
+			document.getElementById("hResult").textContent = h.toFixed(4);
+			document.getElementById("wResult").textContent = w.toFixed(4);
+			document.getElementById("w_primeResult").textContent = w_prime.toFixed(4);
+			document.getElementById("E45Result").textContent = E45.toFixed(4);
+			document.getElementById("tResult").textContent = t.toFixed(4);
+			document.getElementById("abResult").textContent = ab.toFixed(4);
+			document.getElementById("acResult").textContent = ac.toFixed(4);
+			document.getElementById("gi1Result").textContent = gi1.toFixed(4);
+			document.getElementById("gi2Result").textContent = gi2.toFixed(4);
+			document.getElementById("WbResult").textContent = Wb.toFixed(4);
+			document.getElementById("WcResult").textContent = Wc.toFixed(4);
+			document.getElementById("WdResult").textContent = Wd.toFixed(4);
+			document.getElementById("WeResult").textContent = We.toFixed(4);
+			document.getElementById("WfResult").textContent = Wf.toFixed(4);
+			document.getElementById("WgResult").textContent = Wg.toFixed(4);
+			document.getElementById("WhResult").textContent = Wh.toFixed(4);
+			document.getElementById("WoResult").textContent = Wo.toFixed(4);
+			document.getElementById("WpResult").textContent = Wp.toFixed(4);
+			document.getElementById("Wi1Result").textContent = Wi1.toFixed(4);
+			document.getElementById("Wi2Result").textContent = Wi2.toFixed(4);
+			document.getElementById("WjResult").textContent = Wj.toFixed(4);
+			document.getElementById("WkResult").textContent = Wk.toFixed(4);
+			document.getElementById("WmResult").textContent = Wm.toFixed(4);
+			document.getElementById("Wn3Result").textContent = Wn3.toFixed(4);
+			document.getElementById("Wn4Result").textContent = Wn4.toFixed(4);
+			document.getElementById("XEResult").textContent = XE.toFixed(4);
+			document.getElementById("YEResult").textContent = YE.toFixed(4);
+			
+		}
+
+    </script>
+</head>
+<body>
+    <h2>IAS to TAS Calculator</h2>
+    <button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
+	<span id="unitToggleMode">Current mode: non-SI</span>
+    <br><br>
+    <label id="iasLabel">Indicated Airspeed (IAS) in knots:</label>
+    <input type="number" id="ias" oninput="calculateTAS()">
+    <br><br>
+    <label id="altitudeLabel">Altitude in feet:</label>
+    <input type="number" id="altitude" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label>ISA Deviation (°C):</label>
+    <select id="isaSign" onchange="calculateTAS(); calculateIAS()">
+        <option value="+">+</option>
+        <option value="-">-</option>
+    </select>
+    <input type="number" id="isa" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label id="tasLabel">True Airspeed (TAS) in knots:</label>
+    <input type="number" id="tas" oninput="calculateIAS(); calculateHoldingTemplate()">
+    <br><br>
+
+    <label>Holding Time in minutes:</label>
+    <input type="number" id="holdingTime" oninput="calculateHoldingTemplate()">
+    <br><br>
+
+    <hr>
+    <h3>Result from calculator</h3>
+    
+    <p>v : <span id="vResult">N/A</span><span id="vResultUnit"> NM/s</span></p><hr>
+    <p>R : <span id="RResult">N/A</span><span>°/s</span></p><hr>
+    <p>r : <span id="rResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>h : <span id="hResult">N/A</span><span id="hResultUnit"> * 1000 feet</span></p><hr>
+    <p>w : <span id="wResult">N/A</span><span class="wResultUnit"> knots</span></p><hr>
+    <p>w' : <span id="w_primeResult">N/A</span><span id="w_primeResultUnit"> NM/s</span></p><hr>
+    <p>E45 : <span id="E45Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+	<p>t : <span id="tResult">N/A</span><span> seconds</span></p><hr>
+    <p>ab : <span id="abResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>ac : <span id="acResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>gi1, gi3 : <span id="gi1Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>gi2, gi4 : <span id="gi2Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wb : <span id="WbResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wc : <span id="WcResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wd : <span id="WdResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>We : <span id="WeResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wf : <span id="WfResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wg : <span id="WgResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wh : <span id="WhResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wo : <span id="WoResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wp : <span id="WpResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wi1, Wi3 : <span id="Wi1Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wi2, Wi4 : <span id="Wi2Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wj : <span id="WjResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wk, Wl : <span id="WkResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wm : <span id="WmResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wn3 : <span id="Wn3Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>Wn4 : <span id="Wn4Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>XE : <span id="XEResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+    <p>YE : <span id="YEResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
+	
+</body>
+</html>
