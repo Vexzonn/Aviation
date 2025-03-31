@@ -16,6 +16,7 @@
 			document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
 			document.getElementById("vResultUnit").textContent = useSI ? " km/s" : " NM/s";
 			document.getElementById("hResultUnit").textContent = useSI ? " * 1000 meters" : " * 1000 feet";
+			document.getElementById("wResultUnit").textContent = useSI ? " km/h" : " knots";
 			document.getElementById("w_primeResultUnit").textContent = useSI ? " km/s" : " NM/s";
 			document.querySelectorAll(".NMorkm").forEach(element => {
 				element.textContent = useSI ? " km" : " NM";
@@ -192,7 +193,7 @@
     <p>R : <span id="RResult">N/A</span><span>°/s</span></p><hr>
     <p>r : <span id="rResult">N/A</span><span class="NMorkm"> NM</span></p><hr>
     <p>h : <span id="hResult">N/A</span><span id="hResultUnit"> * 1000 feet</span></p><hr>
-    <p>w : <span id="wResult">N/A</span><span class="wResultUnit"> knots</span></p><hr>
+    <p>w : <span id="wResult">N/A</span><span id="wResultUnit"> knots</span></p><hr>
     <p>w' : <span id="w_primeResult">N/A</span><span id="w_primeResultUnit"> NM/s</span></p><hr>
     <p>E45 : <span id="E45Result">N/A</span><span class="NMorkm"> NM</span></p><hr>
 	<p>t : <span id="tResult">N/A</span><span> seconds</span></p><hr>
