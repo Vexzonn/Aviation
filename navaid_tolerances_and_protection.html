@@ -22,6 +22,7 @@
 			const input = parseFloat(document.getElementById("userInput").value);
 			calculateDMETolerance(input);
 			calculateConeofSilence();
+			calculateNavaidProtection();
 		}
 		
         function calculateNavaidTolerances() {
@@ -46,7 +47,23 @@
 			
 			calculateDMETolerance(input);
 		}
-		
+
+		function calculateNavaidProtection() {
+			const input = parseFloat(document.getElementById("userInput").value);
+
+			if (isNaN(input)) {
+				document.getElementById("vorGuidanceResult").textContent = "N/A";
+				return;
+			}
+			
+			if (useSI) {
+				document.getElementById("vorProtectionResult").textContent = (input * Math.tan(7.8 * Math.PI / 180) + 1.852).toFixed(4);
+				document.getElementById("ndbProtectionResult").textContent = (input * Math.tan(10.3 * Math.PI / 180) + 2.315).toFixed(4);
+			} else {
+				document.getElementById("vorProtectionResult").textContent = (input * Math.tan(7.8 * Math.PI / 180) + 1).toFixed(4);
+				document.getElementById("ndbProtectionResult").textContent = (input * Math.tan(10.3 * Math.PI / 180) + 1.25).toFixed(4);
+			}
+		}
 		function calculateDMETolerance(input) {
 			if (isNaN(input)) {
 				document.getElementById("dmeToleranceResult").textContent = "N/A";
@@ -91,7 +108,7 @@
 			
 			document.getElementById("coneSemiAngle").value = coneSemiAngle.toFixed();
 			
-			if (isNaN(inputHeight) || isNaN(coneSemiAngle)) {
+			if (isNaN(inputHeight || coneSemiAngle)) {
 				document.getElementById("coneofSilenceResult").textContent = "N/A";
 				return;
 			}
@@ -116,7 +133,7 @@
     <span id="unitToggleMode">Current mode: non-SI</span>
 	<br><br>
 	<label>Distance from Navaid:</label>
-	<input type="number" id="userInput" oninput="calculateNavaidTolerances()"><span class="NMorkm"> NM</span>
+	<input type="number" id="userInput" oninput="calculateNavaidTolerances(); calculateNavaidProtection()"><span class="NMorkm"> NM</span>
 	<br><br>
 
 	<p><strong>Navaid providing track guidance:</strong></p>
@@ -129,6 +146,11 @@
 	<p>VOR: ± <span id="vorNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
 	<p>NDB: ± <span id="ndbNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
 	<p>LOC: ± <span id="locNoGuidanceResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<br>
+	
+	<p><strong>Navaid protection area:</strong></p>
+	<p>VOR: ± <span id="vorProtectionResult">N/A</span><span class="NMorkm"> NM</span></p>
+	<p>NDB: ± <span id="ndbProtectionResult">N/A</span><span class="NMorkm"> NM</span></p>
 	<hr>
 	
 	<h2>DME fix Tolerance</h2>
