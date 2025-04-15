@@ -197,6 +197,42 @@
 
             document.getElementById("heightLossResult").textContent = result ? result : "Invalid Input";
         }
+
+        function mapScaleCalculator(scaleInputField) {
+            
+            let scaleScaleInput = parseFloat(document.getElementById("scaleScale").value);
+            let scaleUnit = document.getElementById("scaleUnit").value;            
+            let scaleInput = parseFloat(document.getElementById(scaleInputField).value);            
+            
+            if (isNaN(scaleScaleInput) || isNaN(scaleInput)) return;
+
+            let result;
+            //Input in "InputLeft" is always in cm!
+            if (scaleInputField === "scaleInputLeft") {                
+                if (scaleUnit === "m") {
+                    result = ((scaleInput * scaleScaleInput) / 100)
+                } else if (scaleUnit === "km") {
+                    result = ((scaleInput * scaleScaleInput) / 100000)
+                } else {
+                    result = ((scaleInput * scaleScaleInput) / 185200)
+                }
+            
+                document.getElementById("scaleInputRight").value = result.toFixed(4);
+            }
+            //Result should always be in cm!
+            if (scaleInputField === "scaleInputRight") {                
+                if (scaleUnit === "m") {
+                    result = ((scaleInput / scaleScaleInput) * 100)
+                } else if (scaleUnit === "km") {
+                    result = ((scaleInput / scaleScaleInput) * 100000)
+                } else {
+                    result = ((scaleInput / scaleScaleInput) * 185200)
+                }
+            
+                document.getElementById("scaleInputLeft").value = result.toFixed(4);
+            }
+            
+        }
     </script>
 </head>
 <body>
@@ -279,5 +315,25 @@
     <br><br>
 
     <p>Result: <span id="heightLossResult"></span></p>
+    <hr>
+
+    <h2>Map Scale Calculator</h2>
+    
+    <label>Scale, 1:</label>
+    <input type="number" id="scaleScale" oninput="mapScaleCalculator('scaleInputLeft')">
+    <br><br>
+    
+    <label>cm:</label>
+    <input type="number" id="scaleInputLeft" oninput="mapScaleCalculator('scaleInputLeft')">
+    
+    <select id="scaleUnit" onchange="mapScaleCalculator('scaleInputLeft')">
+        <option value="NM">NM:</option>
+        <option value="m">m:</option>
+        <option value="km">km:</option>
+    </select>
+
+    <input type="number" id="scaleInputRight" oninput="mapScaleCalculator('scaleInputRight')">
+    <hr>
+
 </body>
 </html>
