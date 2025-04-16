@@ -8,6 +8,7 @@
         let useSI = false;  // Default to non-SI units
         let useTAS = true;  // Default to TAS input
         let rateOfTurn = 0;
+        let radius = 0;
 
         function toggleUnits() {
             useSI = !useSI;
@@ -15,10 +16,12 @@
             document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
             document.getElementById("iasLabel").textContent = useSI ? "Indicated Airspeed (IAS) in km/h:" : "Indicated Airspeed (IAS) in knots:";
             document.getElementById("altitudeLabel").textContent = useSI ? "Altitude in meters:" : "Altitude in feet:";
-            document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
-			document.getElementById("radiusNMorkm").textContent = useSI ? " km" : " NM";
-			document.getElementById("WindSpeedUnit").textContent = useSI ? "Wind Speed in km/h:" : "Wind Speed in knots:";
-			document.getElementById("EinNMorkm").textContent = useSI ? " km" : " NM";
+            document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";			
+			document.getElementById("WindSpeedUnit").textContent = useSI ? "Wind Speed in km/h:" : "Wind Speed in knots:";			
+            document.querySelectorAll(".NMorkm").forEach(element => {
+                element.textContent = useSI ? " km" : " NM";
+            });
+
             calculateTAS();
             calculateRateOfTurn();
             calculateEaot();
@@ -69,6 +72,7 @@
                 document.getElementById("rateOfTurnResult").textContent = "Invalid Input";
                 document.getElementById("radiusResult").textContent = "Invalid Input";
                 rateOfTurn = 0;
+                radius = 0;
                 return;
             }
 
@@ -80,23 +84,31 @@
 
             document.getElementById("rateOfTurnResult").textContent = rateOfTurn.toFixed(4);
 
-            let radius = tas / (20 * Math.PI * rateOfTurn);
+            radius = tas / (20 * Math.PI * rateOfTurn);
             document.getElementById("radiusResult").textContent = radius.toFixed(4);
 
             calculateEaot();
         }
 
-        function calculateEaot() {
+        function calculateEaot() {            
             let angleOfTurn = parseFloat(document.getElementById("angleOfTurn").value);
             let windSpeed = parseFloat(document.getElementById("windSpeed").value);
 
-            if (isNaN(angleOfTurn) || isNaN(windSpeed) || rateOfTurn === 0) {
+            if (isNaN(angleOfTurn) || isNaN(windSpeed) || rateOfTurn === 0 || radius === 0) {
                 document.getElementById("eaotResult").textContent = "Invalid Input";
                 return;
             }
 
             let eaot = (angleOfTurn / rateOfTurn) * (windSpeed / 3600);
             document.getElementById("eaotResult").textContent = `E(${angleOfTurn}°) = ${eaot.toFixed(4)}`;
+
+            let E90 = (90 / rateOfTurn) * (windSpeed / 3600);
+            let boundingCircleE90 = Math.sqrt(Math.pow(radius, 2) + Math.pow(E90, 2));
+            let boundingCircleE180 = (radius + E90);
+            let boundingCircleE270 = (radius + 2*E90);
+            document.getElementById("boundingCircleE90Result").textContent = boundingCircleE90.toFixed(4);
+            document.getElementById("boundingCircleE180Result").textContent = boundingCircleE180.toFixed(4);
+            document.getElementById("boundingCircleE270Result").textContent = boundingCircleE270.toFixed(4);
         }
     </script>
 </head>
@@ -133,7 +145,7 @@
     <br><br>
 
     <p>Rate of Turn (°/s): <span id="rateOfTurnResult">N/A</span></p>
-    <p>Radius of Turn: <span id="radiusResult">N/A</span><span id="radiusNMorkm"> NM</span></p>
+    <p>Radius of Turn: <span id="radiusResult">N/A</span><span class="NMorkm"> NM</span></p>
 
     <hr>
     <h2>Wind Effect Calculator</h2>
@@ -145,6 +157,12 @@
     <input type="number" id="windSpeed" oninput="calculateEaot()">
     <br><br>
 
-    <p>Wind Effect: <span id="eaotResult">N/A</span><span id="EinNMorkm"> NM</span></p>
+    <p>Wind Effect: <span id="eaotResult">N/A</span><span class="NMorkm"> NM</span></p>
+    <hr>
+
+    <h2>Bounding Circles</h2>
+    <p>sqrt(r^2 + E^2) = <span id="boundingCircleE90Result">N/A</span><span class="NMorkm"> NM</span></p>
+    <p>r + E = <span id="boundingCircleE180Result">N/A</span><span class="NMorkm"> NM</span></p>
+    <p>r + 2*E = <span id="boundingCircleE270Result">N/A</span><span class="NMorkm"> NM</span></p>
 </body>
 </html>
