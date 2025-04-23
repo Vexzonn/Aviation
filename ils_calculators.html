@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILS Calculators</title>
+    <script>
+
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function cot(x) {
+            return 1 / Math.tan(x);
+        }
+
+        function MissedApproachEquivalent() {
+
+            let hma = parseFloat(document.getElementById("hmaInput").value);
+            let Z = parseFloat(document.getElementById("ZInput").value);
+            let GPangle = parseFloat(document.getElementById("GPangleInput").value);
+            let beforeorafterthrhld = document.getElementById("beforeorafterthrhld").value;
+            let X = parseFloat(document.getElementById("XInput").value);
+            let Xz = parseFloat(document.getElementById("XzInput").value);
+
+            if (isNaN(hma) || isNaN(Z) || isNaN(GPangle) || isNaN(X) || isNaN(Xz)) {
+                document.getElementById("haResult").textContent = "Invalid Input";
+                return;
+            }
+
+            const cotArctanZ = cot(Math.atan(Z / 100));
+            const cotGP = cot(toRadians(GPangle));
+            let haResult;
+            if (beforeorafterthrhld === "-") {
+                haResult = (hma * cotArctanZ + (Xz - X)) / (cotArctanZ + cotGP);
+            } else {
+                haResult = (hma * cotArctanZ + (Xz + X)) / (cotArctanZ + cotGP);
+            }
+
+            document.getElementById("haResult").textContent = haResult.toFixed(4);
+        }
+    </script>
+</head>
+
+<body>
+    <h2>ILS Missed Approach Equivalent Height</h2>
+
+    <label>Height of obstacle in the missed approach segment (hma):</label>
+    <input type="number" id="hmaInput" oninput="MissedApproachEquivalent()">
+    <br><br>
+    <label>Gradient of missed approach surface (usually 2.5%) (Z):</label>
+    <input type="number" id="ZInput" oninput="MissedApproachEquivalent()">
+    <br><br>
+    <label>Glide path angle (usually 3 degrees):</label>
+    <input type="number" id="GPangleInput" oninput="MissedApproachEquivalent()">
+    <br><br>
+    <label>Range of obstacle relative to threshold (negative after threshold) (X):</label>
+    <select id="beforeorafterthrhld" onchange="MissedApproachEquivalent()">
+        <option value="-">-</option>
+        <option value="+">+</option>
+    </select>
+    <input type="number" id="XInput" oninput="MissedApproachEquivalent()">
+    <br><br>
+    <label>Distance from threshold to beginning of Z surface (900 m (700 m Cat H)) (Xz):</label>
+    <input type="number" id="XzInput" oninput="MissedApproachEquivalent()">
+    <br><br>
+
+    <p>Height of equivalent approach obstacle (ha) = <span id="haResult"></span></p>
+</body>
+
+</html>
