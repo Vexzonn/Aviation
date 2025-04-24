@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holding Basic Area Calculator</title>
+    <script>
+        let useSI = false; // Default to non-SI units
+
+        function toggleUnits() {
+            useSI = !useSI;
+            document.getElementById("unitToggle").textContent = useSI ? "Switch to non-SI units" : "Switch to SI units";
+            document.getElementById("unitToggleMode").textContent = useSI ? "Current mode: SI" : "Current mode: non-SI";
+            document.getElementById("iasLabel").textContent = useSI ? "Indicated Airspeed (IAS) in km/h:" : "Indicated Airspeed (IAS) in knots:";
+            document.getElementById("altitudeLabel").textContent = useSI ? "Altitude in meters:" : "Altitude in feet:";
+            document.getElementById("tasLabel").textContent = useSI ? "True Airspeed (TAS) in km/h:" : "True Airspeed (TAS) in knots:";
+            document.querySelectorAll(".NMorkm").forEach(element => {
+                element.textContent = useSI ? " km" : " NM";
+            });
+            calculateTAS();
+            calculateIAS();
+        }
+
+        function calculateTAS() {
+            let ias = parseFloat(document.getElementById("ias").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(ias) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let tas = ias * constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628));
+            document.getElementById("tas").value = tas.toFixed(4);
+
+            calculateBasicHoldingArea();
+        }
+
+        function calculateIAS() {
+            let tas = parseFloat(document.getElementById("tas").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let isaDeviation = parseFloat(document.getElementById("isa").value);
+            let sign = document.getElementById("isaSign").value;
+
+            if (isNaN(tas) || isNaN(altitude) || isNaN(isaDeviation)) return;
+
+            isaDeviation = sign === "-" ? -isaDeviation : isaDeviation;
+
+            const baseTemp = 288;
+            const lapseRate = useSI ? 0.006496 : 0.00198;
+            const constant = 171233;
+
+            let T1 = (baseTemp + isaDeviation) - (lapseRate * altitude);
+            let T2 = baseTemp - (lapseRate * altitude);
+
+            let ias = tas / (constant * (Math.pow(T1, 0.5) / Math.pow(T2, 2.628)));
+            document.getElementById("ias").value = ias.toFixed(4);
+        }
+
+        function calculateBasicHoldingArea() {
+            let tas = parseFloat(document.getElementById("tas").value);
+            let altitude = parseFloat(document.getElementById("altitude").value);
+            let T = parseFloat(document.getElementById("holdingTime").value);
+            let D = parseFloat(document.getElementById("D").value);
+
+            if (isNaN(tas) || isNaN(altitude) || isNaN(T) || isNaN(D)) return;
+
+            let V = tas;
+            let v = V / 3600;
+
+            let R = 0;
+            if (useSI) {
+                R = Math.min(943.27 / V, 3);
+            } else {
+                R = Math.min(509.26 / V, 3);
+            }
+
+            let r = V / (62.83 * R);
+            let hl = altitude / 1000;
+            let t = 60 * T;
+            let ds = v * t;
+
+            let Ds = 0;
+            if (useSI) {
+                Ds = Math.sqrt(Math.pow(D, 2) - Math.pow(hl, 2));
+            } else {
+                Ds = Math.sqrt(Math.pow(D, 2) - 0.027 * Math.pow(hl, 2));
+            }
+
+            let DL = 0;
+            if (useSI) {
+                DL = Math.sqrt(Math.pow(Ds + ds, 2) + 4 * Math.pow(r, 2) + Math.pow(hl, 2));
+            } else {
+                DL = Math.sqrt(Math.pow(Ds + ds, 2) + 4 * Math.pow(r, 2) + 0.027 * Math.pow(hl, 2));
+            }
+
+            let DLs = 0;
+            if (useSI) {
+                DLs = Math.sqrt(Math.pow(DL, 2) - Math.pow(hl, 2));
+            } else {
+                DLs = Math.sqrt(Math.pow(DL, 2) - 0.027 * Math.pow(hl, 2));
+            }
+
+            document.getElementById("dsResult").textContent = ds.toFixed(4);
+            document.getElementById("DsResult").textContent = Ds.toFixed(4);
+            document.getElementById("DLResult").textContent = DL.toFixed(4);
+            document.getElementById("DLsResult").textContent = DLs.toFixed(4);
+        }
+
+    </script>
+</head>
+
+<body>
+    <h2>Holding Basic Area Calculator</h2>
+    <h2>IAS to TAS Calculator</h2>
+    <button id="unitToggle" onclick="toggleUnits()">Switch to SI units</button>
+    <span id="unitToggleMode">Current mode: non-SI</span>
+    <br><br>
+    <label id="iasLabel">Indicated Airspeed (IAS) in knots:</label>
+    <input type="number" id="ias" oninput="calculateTAS()">
+    <br><br>
+    <label id="altitudeLabel">Altitude in feet:</label>
+    <input type="number" id="altitude" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label>ISA Deviation (°C):</label>
+    <select id="isaSign" onchange="calculateTAS(); calculateIAS()">
+        <option value="+">+</option>
+        <option value="-">-</option>
+    </select>
+    <input type="number" id="isa" oninput="calculateTAS(); calculateIAS()">
+    <br><br>
+    <label id="tasLabel">True Airspeed (TAS) in knots:</label>
+    <input type="number" id="tas" oninput="calculateIAS(); calculateBasicHoldingArea()">
+    <br><br>
+
+    <label>Holding Time in minutes:</label>
+    <input type="number" id="holdingTime" oninput="calculateBasicHoldingArea()">
+    <br><br>
+
+    <label>Distance (D):</label>
+    <input type="number" id="D" oninput="calculateBasicHoldingArea()">
+    <span class="NMorkm">NM</span>
+    <br><br>
+
+    <hr>
+    <h3>Result from calculator</h3>
+
+    <p>ds : <span id="dsResult">N/A</span><span class="NMorkm"> NM</span></p>
+    <hr>
+    <p>Ds : <span id="DsResult">N/A</span><span class="NMorkm"> NM</span></p>
+    <hr>
+    <p>DL : <span id="DLResult">N/A</span><span class="NMorkm"> NM</span></p>
+    <hr>
+    <p>DLs : <span id="DLsResult">N/A</span><span class="NMorkm"> NM</span></p>
+    <hr>
+
+</body>
+
+</html>
