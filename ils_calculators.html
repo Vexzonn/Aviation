@@ -20,7 +20,6 @@
             let hma = parseFloat(document.getElementById("hmaInput").value);
             let Z = parseFloat(document.getElementById("ZInput").value);
             let GPangle = parseFloat(document.getElementById("GPangleInput").value);
-            let beforeorafterthrhld = document.getElementById("beforeorafterthrhld").value;
             let X = parseFloat(document.getElementById("XInput").value);
             let Xz = parseFloat(document.getElementById("XzInput").value);
 
@@ -31,12 +30,8 @@
 
             const cotArctanZ = cot(Math.atan(Z / 100));
             const cotGP = cot(toRadians(GPangle));
-            let haResult;
-            if (beforeorafterthrhld === "-") {
-                haResult = (hma * cotArctanZ + (Xz - X)) / (cotArctanZ + cotGP);
-            } else {
-                haResult = (hma * cotArctanZ + (Xz + X)) / (cotArctanZ + cotGP);
-            }
+            let haResult = 0;
+            haResult = (hma * cotArctanZ + (Xz + X)) / (cotArctanZ + cotGP);
 
             document.getElementById("haResult").textContent = haResult.toFixed(4);
         }
@@ -56,10 +51,6 @@
     <input type="number" id="GPangleInput" oninput="MissedApproachEquivalent()">
     <br><br>
     <label>Range of obstacle relative to threshold (negative after threshold) (X):</label>
-    <select id="beforeorafterthrhld" onchange="MissedApproachEquivalent()">
-        <option value="-">-</option>
-        <option value="+">+</option>
-    </select>
     <input type="number" id="XInput" oninput="MissedApproachEquivalent()">
     <br><br>
     <label>Distance from threshold to beginning of Z surface (900 m (700 m Cat H)) (Xz):</label>
