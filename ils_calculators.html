@@ -35,6 +35,56 @@
 
             document.getElementById("haResult").textContent = haResult.toFixed(4);
         }
+
+        function ILSOCH() {
+
+            let obstacleHeight = parseFloat(document.getElementById("obstacleHeightInput").value);
+            let altimeter = document.getElementById("altimeter").value;
+            let cat = document.getElementById("cat").value;
+            let catA = 0;
+            let catB = 0;
+            let catC = 0;
+            let catD = 0;
+            let catH = 0;
+            let heightLossAltimeterMargin = 0;
+
+            if (isNaN(obstacleHeight)) {
+                document.getElementById("OCH").textContent = "Invalid Input";
+                return;
+            }
+
+            if (altimeter === "pressure") {
+                if (cat === "catA") {
+                    heightLossAltimeterMargin = 40;
+                } else if (cat === "catB") {
+                    heightLossAltimeterMargin = 43;
+                } else if (cat === "catC") {
+                    heightLossAltimeterMargin = 46;
+                } else if (cat === "catD") {
+                    heightLossAltimeterMargin = 49;
+                } else if (cat === "catH") {
+                    heightLossAltimeterMargin = 35;
+                }
+            } else {
+                if (cat === "catA") {
+                    heightLossAltimeterMargin = 13;
+                } else if (cat === "catB") {
+                    heightLossAltimeterMargin = 18;
+                } else if (cat === "catC") {
+                    heightLossAltimeterMargin = 22;
+                } else if (cat === "catD") {
+                    heightLossAltimeterMargin = 26;
+                } else if (cat === "catH") {
+                    heightLossAltimeterMargin = 8;
+                }
+            }
+
+            let OCH = obstacleHeight + heightLossAltimeterMargin;
+
+            document.getElementById("heightLossAltimeterMargin").textContent = heightLossAltimeterMargin.toFixed(0);
+            document.getElementById("OCH").textContent = OCH.toFixed(4);
+
+        }
     </script>
 </head>
 
@@ -42,7 +92,7 @@
     <h2>ILS Missed Approach Equivalent Height</h2>
 
     <label>Height of obstacle in the missed approach segment (hma):</label>
-    <input type="number" id="hmaInput" oninput="MissedApproachEquivalent()">
+    <input type="number" id="hmaInput" oninput="MissedApproachEquivalent()"><span> meters</span>
     <br><br>
     <label>Gradient of missed approach surface (usually 2.5%) (Z):</label>
     <input type="number" id="ZInput" oninput="MissedApproachEquivalent()">
@@ -51,13 +101,41 @@
     <input type="number" id="GPangleInput" oninput="MissedApproachEquivalent()">
     <br><br>
     <label>Range of obstacle relative to threshold (negative after threshold) (X):</label>
-    <input type="number" id="XInput" oninput="MissedApproachEquivalent()">
+    <input type="number" id="XInput" oninput="MissedApproachEquivalent()"><span> meters</span>
     <br><br>
     <label>Distance from threshold to beginning of Z surface (900 m (700 m Cat H)) (Xz):</label>
-    <input type="number" id="XzInput" oninput="MissedApproachEquivalent()">
+    <input type="number" id="XzInput" oninput="MissedApproachEquivalent()"><span> meters</span>
     <br><br>
 
-    <p>Height of equivalent approach obstacle (ha) = <span id="haResult"></span></p>
+    <p>Height of equivalent approach obstacle (ha) = <span id="haResult">N/A</span><span> meters</span></p>
+
+    <hr>
+    <h2>OCH Calculator</h2>
+    <label>Height of controlling obstacle:</label>
+    <input type="number" id="obstacleHeightInput" oninput="ILSOCH()"><span> meters</span>
+    <br><br>
+    <label>Altimeter:</label>
+    <select id="altimeter" onchange="ILSOCH()">
+        <option value="pressure">Pressure (BARO)</option>
+        <option value="radio">Radio (RA)</option>
+    </select>
+    <br><br>
+    <label>cat:</label>
+    <select id="cat" onchange="ILSOCH()">
+        <option value="catA">cat A</option>
+        <option value="catB">cat B</option>
+        <option value="catC">cat C</option>
+        <option value="catD">cat D</option>
+        <option value="catH">cat H</option>
+    </select>
+    <br><br>
+
+    <p>Height loss (Radio altimeter)/Altimeter margin (Pressure altimeter) = <span
+            id="heightLossAltimeterMargin">N/A</span><span>
+            meters</span>
+    </p>
+    <p>OCH for the obstacle = <span id="OCH">N/A</span><span> meters</span></p>
+
 </body>
 
 </html>
